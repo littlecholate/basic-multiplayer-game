@@ -24,7 +24,8 @@ io.on('connection', (socket) => {
   backendPlayers[socket.id] = {
     x: 500 * Math.random(),
     y: 500 * Math.random(),
-    color: `hsl(${360 * Math.random()}, 100%, 50%)`
+    color: `hsl(${360 * Math.random()}, 100%, 50%)`,
+    sequenceNumber: 0
   }
 
   // broadcast msg to others whenever a new player comes in
@@ -35,8 +36,31 @@ io.on('connection', (socket) => {
     delete backendPlayers[socket.id]
     io.emit('updatePlayers', backendPlayers)
   })
-  console.log(backendPlayers)
+
+  const SPEED = 10
+  socket.on('keydown', ({ keycode, sequenceNumber }) => {
+    backendPlayers[socket.id].sequenceNumber = sequenceNumber
+    switch (keycode) {
+      case 'KeyW':
+        backendPlayers[socket.id].y -= SPEED
+        break
+      case 'KeyA':
+        backendPlayers[socket.id].x -= SPEED
+        break
+      case 'KeyS':
+        backendPlayers[socket.id].y += SPEED
+        break
+      case 'KeyD':
+        backendPlayers[socket.id].x += SPEED
+        break
+    }
+  })
 })
+
+// emit players positions
+setInterval(() => {
+  io.emit('updatePlayers', backendPlayers)
+}, 15)
 
 server.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
